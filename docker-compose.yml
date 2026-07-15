@@ -1,0 +1,198 @@
+
+services:
+  namenode:
+    build:
+      context: ./hadoop-image
+      dockerfile: Dockerfile
+    image: unigap/hadoop:3.3.6
+    networks:
+      - streaming-network
+    hostname: namenode
+    command: /usr/local/bin/start-namenode.sh
+    ports:
+      - '9870:9870'
+    volumes:
+      - namenode_data:/data
+      - ./conf/capacity-scheduler.xml:/usr/local/hadoop/etc/hadoop/capacity-scheduler.xml
+      - ./conf/core-site.xml:/usr/local/hadoop/etc/hadoop/core-site.xml
+      - ./conf/hdfs-site.xml:/usr/local/hadoop/etc/hadoop/hdfs-site.xml
+      - ./conf/mapred-site.xml:/usr/local/hadoop/etc/hadoop/mapred-site.xml
+      - ./conf/yarn-site.xml:/usr/local/hadoop/etc/hadoop/yarn-site.xml
+
+  datanode1:
+    image: unigap/hadoop:3.3.6
+    networks:
+      - streaming-network
+    hostname: datanode1
+    command: [ "hdfs", "datanode" ]
+    ports:
+      - '19864:9864'
+    volumes:
+      - datanode1_data:/data
+      - ./conf/capacity-scheduler.xml:/usr/local/hadoop/etc/hadoop/capacity-scheduler.xml
+      - ./conf/core-site.xml:/usr/local/hadoop/etc/hadoop/core-site.xml
+      - ./conf/hdfs-site.xml:/usr/local/hadoop/etc/hadoop/hdfs-site.xml
+      - ./conf/mapred-site.xml:/usr/local/hadoop/etc/hadoop/mapred-site.xml
+      - ./conf/yarn-site.xml:/usr/local/hadoop/etc/hadoop/yarn-site.xml
+
+  # datanode2:
+  #   image: unigap/hadoop:3.3.6
+  #   networks:
+  #     - streaming-network
+  #   hostname: datanode2
+  #   command: [ "hdfs", "datanode" ]
+  #   ports:
+  #     - '29864:9864'
+  #   volumes:
+  #     - datanode2_data:/data
+  #     - ./conf/capacity-scheduler.xml:/usr/local/hadoop/etc/hadoop/capacity-scheduler.xml
+  #     - ./conf/core-site.xml:/usr/local/hadoop/etc/hadoop/core-site.xml
+  #     - ./conf/hdfs-site.xml:/usr/local/hadoop/etc/hadoop/hdfs-site.xml
+  #     - ./conf/mapred-site.xml:/usr/local/hadoop/etc/hadoop/mapred-site.xml
+  #     - ./conf/yarn-site.xml:/usr/local/hadoop/etc/hadoop/yarn-site.xml
+
+  resourcemanager:
+    image: unigap/hadoop:3.3.6
+    networks:
+      - streaming-network
+    hostname: resourcemanager
+    command: [ "yarn", "resourcemanager" ]
+    ports:
+      - '8088:8088'
+    volumes:
+      - resourcemanager_data:/data
+      - ./conf/capacity-scheduler.xml:/usr/local/hadoop/etc/hadoop/capacity-scheduler.xml
+      - ./conf/core-site.xml:/usr/local/hadoop/etc/hadoop/core-site.xml
+      - ./conf/hdfs-site.xml:/usr/local/hadoop/etc/hadoop/hdfs-site.xml
+      - ./conf/mapred-site.xml:/usr/local/hadoop/etc/hadoop/mapred-site.xml
+      - ./conf/yarn-site.xml:/usr/local/hadoop/etc/hadoop/yarn-site.xml
+
+  nodemanager1:
+    image: unigap/hadoop:3.3.6
+    networks:
+      - streaming-network
+    hostname: nodemanager1
+    command: [ "yarn", "nodemanager" ]
+    ports:
+      - '18042:8042'
+    volumes:
+      - nodemanager1_data:/data
+      - ./conf/capacity-scheduler.xml:/usr/local/hadoop/etc/hadoop/capacity-scheduler.xml
+      - ./conf/core-site.xml:/usr/local/hadoop/etc/hadoop/core-site.xml
+      - ./conf/hdfs-site.xml:/usr/local/hadoop/etc/hadoop/hdfs-site.xml
+      - ./conf/mapred-site.xml:/usr/local/hadoop/etc/hadoop/mapred-site.xml
+      - ./conf/yarn-site.xml:/usr/local/hadoop/etc/hadoop/yarn-site.xml
+
+  # nodemanager2:
+  #   image: unigap/hadoop:3.3.6
+  #   networks:
+  #     - streaming-network
+  #   hostname: nodemanager2
+  #   command: [ "yarn", "nodemanager" ]
+  #   ports:
+  #     - '28042:8042'
+  #   volumes:
+  #     - nodemanager2_data:/data
+  #     - ./conf/capacity-scheduler.xml:/usr/local/hadoop/etc/hadoop/capacity-scheduler.xml
+  #     - ./conf/core-site.xml:/usr/local/hadoop/etc/hadoop/core-site.xml
+  #     - ./conf/hdfs-site.xml:/usr/local/hadoop/etc/hadoop/hdfs-site.xml
+  #     - ./conf/mapred-site.xml:/usr/local/hadoop/etc/hadoop/mapred-site.xml
+  #     - ./conf/yarn-site.xml:/usr/local/hadoop/etc/hadoop/yarn-site.xml
+  postgres:
+    image: "postgres:16.3"
+    networks:
+      - streaming-network
+    hostname: postgres
+    container_name: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "UnigapPostgres@123"
+      POSTGRES_DB: "postgres"
+      PGDATA: "/var/lib/postgresql/data"
+    ports:
+      - "5433:5432"
+
+  adminer:
+    image: "adminer:4.8.1"
+    networks:
+      - streaming-network
+    hostname: adminer
+    container_name: adminer
+    ports:
+      - "8380:8080"
+
+  dashboard:
+    image: python:3.11-slim
+    container_name: glamira-dashboard
+    hostname: dashboard
+    working_dir: /app
+    networks:
+      - streaming-network
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    volumes:
+      - ./dashboard:/app
+    ports:
+      - "8501:8501"
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             streamlit run app.py --server.address=0.0.0.0 --server.port=8501"
+    depends_on:
+      - postgres
+
+  spark-client:
+    build:
+      context: ./spark-image
+      dockerfile: Dockerfile
+    image: unigap/spark:3.5
+    container_name: spark-client
+    hostname: spark-client
+    stdin_open: true                      
+    tty: true                          
+
+    command: sh -c "/opt/entrypoint.sh && tail -f /dev/null"
+    networks:
+      - streaming-network
+    env_file:
+      - .env                             
+    volumes:
+      - .:/opt/spark/app                  
+      - spark_data:/data
+      - spark_ivy2:/home/spark/.ivy2
+      - ./conf/capacity-scheduler.xml:/usr/local/hadoop/etc/hadoop/capacity-scheduler.xml
+      - ./conf/core-site.xml:/usr/local/hadoop/etc/hadoop/core-site.xml
+      - ./conf/hdfs-site.xml:/usr/local/hadoop/etc/hadoop/hdfs-site.xml
+      - ./conf/mapred-site.xml:/usr/local/hadoop/etc/hadoop/mapred-site.xml
+      - ./conf/yarn-site.xml:/usr/local/hadoop/etc/hadoop/yarn-site.xml
+    depends_on:                           
+      - namenode
+      - postgres
+
+networks:
+  streaming-network:
+    external: true
+
+volumes:
+  namenode_data:
+    driver: local
+  datanode1_data:
+    driver: local
+  # datanode2_data:
+  #   driver: local
+  resourcemanager_data:
+    driver: local
+  nodemanager1_data:
+    driver: local
+  # nodemanager2_data:
+  #   driver: local
+  spark_data:
+    driver: local
+  spark_ivy2:
+    driver: local
+  postgres_data:  
+    driver: local

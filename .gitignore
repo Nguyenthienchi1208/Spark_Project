@@ -1,0 +1,18 @@
+# Các file hệ thống/tạm thời
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+.env
+
+# Các file dữ liệu/cấu hình nhạy cảm hoặc quá lớn
+*.tar.gz
+*.mmdb
+.venv/
+env/
+venv/
+*.log
+
+# Cấu hình IDE (nếu có)
+.vscode/
+.idea/

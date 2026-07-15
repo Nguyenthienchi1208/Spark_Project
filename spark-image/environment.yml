@@ -1,0 +1,14 @@
+name: pyspark_conda_env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10.13
+  - pyspark=3.5.1
+  - conda-pack
+  - ua-parser
+  - user-agents
+  - pip
+  - pip:
+      - maxminddb
+      - pytest
