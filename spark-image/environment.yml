@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.10.13
+  - python=3.12.3
   - pyspark=3.5.1
   - conda-pack
   - ua-parser

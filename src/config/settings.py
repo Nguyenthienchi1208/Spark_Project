@@ -4,16 +4,14 @@ from config.logger_config import setup_logger
 logger = setup_logger("ConfigSettings")
 
 KAFKA_CONFIG = {
-    "bootstrap_servers": os.getenv("KAFKA_BOOTSTRAP_SERVERS"),
+    "bootstrap_servers": os.getenv("KAFKA_BOOTSTRAP_SERVERS", "46.202.167.130:9094"),
     "topic": os.getenv("KAFKA_TOPIC", "product_view"),
-    # latest = only new messages after the query starts (or checkpoint resume)
     "starting_offsets": os.getenv("KAFKA_STARTING_OFFSETS", "latest"),
-    # Cap Kafka offsets per micro-batch to avoid driver/executor OOM
     "max_offsets_per_trigger": os.getenv("KAFKA_MAX_OFFSETS_PER_TRIGGER", "1000"),
     "fail_on_data_loss": os.getenv("KAFKA_FAIL_ON_DATA_LOSS", "false"),
     "security_protocol": os.getenv("KAFKA_SECURITY_PROTOCOL", "SASL_PLAINTEXT"),
     "sasl_mechanism": os.getenv("KAFKA_SASL_MECHANISM", "PLAIN"),
-    "sasl_jaas_config": os.getenv("KAFKA_SASL_JAAS_CONFIG"),
+    # Xóa hoàn toàn sasl_jaas_config khỏi đây!
 }
 
 DB_USER = os.getenv("POSTGRES_USER", "postgres")

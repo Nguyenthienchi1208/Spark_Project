@@ -1,28 +1,37 @@
-# File: utils/postgres_handler.py
 from config.settings import POSTGRES_CONFIG, logger
+import os
 
-def get_jdbc_url():
-    return POSTGRES_CONFIG["url"]
-
-def get_db_properties():
-    return {
-        "user": POSTGRES_CONFIG["user"],
-        "password": POSTGRES_CONFIG["password"],
-        "driver": POSTGRES_CONFIG["driver"]
-    }
+# Hàm bổ trợ để lấy config an toàn
+def _get_config():
+    # Kiểm tra nếu POSTGRES_CONFIG bị empty do lỗi scope khi chạy trên Worker
+    if not POSTGRES_CONFIG or "url" not in POSTGRES_CONFIG:
+        return {
+            "url": os.getenv("DB_URL"),
+            "user": os.getenv("DB_USER"),
+            "password": os.getenv("DB_PASSWORD"),
+            "driver": "org.postgresql.Driver"
+        }
+    return POSTGRES_CONFIG
 
 def write_to_postgres(df, table_name, mode="append"):
-    """Ghi DataFrame vào Postgres."""
     if df is None or df.rdd.isEmpty():
         return
     
+    config = _get_config()
+    
+    # BẮT LỖI NGAY TẠI ĐÂY
+    if not config.get("url") or not config.get("user") or not config.get("password"):
+        error_msg = f"Cấu hình Postgres bị thiếu: {config}"
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
     try:
         df.write.format("jdbc") \
-            .option("url", get_jdbc_url()) \
+            .option("url", config["url"]) \
             .option("dbtable", table_name) \
-            .option("user", get_db_properties()["user"]) \
-            .option("password", get_db_properties()["password"]) \
-            .option("driver", get_db_properties()["driver"]) \
+            .option("user", config["user"]) \
+            .option("password", config["password"]) \
+            .option("driver", config.get("driver", "org.postgresql.Driver")) \
             .mode(mode) \
             .save()
         logger.info(f"✅ Đã ghi thành công vào bảng {table_name}")
@@ -31,40 +40,16 @@ def write_to_postgres(df, table_name, mode="append"):
         raise e
 
 def read_from_postgres(spark, query):
-    """Đọc dữ liệu từ Postgres."""
+    """Hàm đọc dữ liệu từ Postgres bổ sung lại cho bạn"""
+    config = _get_config()
     try:
         return spark.read.format("jdbc") \
-            .option("url", get_jdbc_url()) \
+            .option("url", config["url"]) \
             .option("dbtable", f"({query}) AS temp_query") \
-            .option("user", get_db_properties()["user"]) \
-            .option("password", get_db_properties()["password"]) \
-            .option("driver", get_db_properties()["driver"]) \
+            .option("user", config["user"]) \
+            .option("password", config["password"]) \
+            .option("driver", config.get("driver", "org.postgresql.Driver")) \
             .load()
     except Exception as e:
         logger.error(f"❌ Lỗi đọc từ Postgres: {str(e)}")
         raise e
-
-def execute_upsert_query(query):
-    """Thực thi SQL trực tiếp qua JDBC (Không dùng jpype)."""
-    from pyspark.sql import SparkSession
-    spark = SparkSession.getActiveSession()
-    
-    conn = None
-    try:
-        driver_manager = spark._jvm.java.sql.DriverManager
-        conn = driver_manager.getConnection(
-            get_jdbc_url(), 
-            get_db_properties()["user"], 
-            get_db_properties()["password"]
-        )
-        
-        with conn.createStatement() as stmt:
-            stmt.execute(query)
-            
-        logger.info("✅ Lệnh SQL đã thực thi thành công.")
-    except Exception as e:
-        logger.error(f"❌ Lỗi thực thi SQL: {str(e)}")
-        raise e
-    finally:
-        if conn is not None:
-            conn.close()

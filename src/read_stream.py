@@ -1,7 +1,6 @@
 from pyspark.sql.functions import col, from_json
 from schemas.data_schema import GLAMIRA_EVENT_SCHEMA
 
-
 def get_kafka_stream(spark, kafka_config):
     reader = (
         spark.readStream
@@ -13,11 +12,9 @@ def get_kafka_stream(spark, kafka_config):
         .option("failOnDataLoss", kafka_config.get("fail_on_data_loss", "false"))
         .option("kafka.security.protocol", kafka_config["security_protocol"])
         .option("kafka.sasl.mechanism", kafka_config["sasl_mechanism"])
-        .option("kafka.sasl.jaas.config", kafka_config["sasl_jaas_config"])
     )
 
     return reader.load()
-
 
 def transform_stream(raw_df):
     """Parse Kafka JSON and rename `_id` → `event_id` for the warehouse contract."""
