@@ -7,11 +7,10 @@ from utils.surrogate_keys import location_sk_expr, UNKNOWN_SK
 def process_dim_location(df):
 
     def _get_worker_mmdb_path():
-        # Ưu tiên 1: Đường dẫn khi dùng --files (cơ chế Spark truyền file về thư mục làm việc của worker)
+
         if os.path.exists("./GeoLite2-City.mmdb"):
             return os.path.abspath("./GeoLite2-City.mmdb")
         
-        # Ưu tiên 2: Các đường dẫn dự phòng (trường hợp chạy local/debug)
         candidates = [
             "/opt/spark/app/src/data/GeoLite2-City.mmdb",
             "/spark/src/data/GeoLite2-City.mmdb",
@@ -24,10 +23,8 @@ def process_dim_location(df):
         return None
 
     def process_partition(iterator):
-        # Resolve đường dẫn tại đây - nơi worker đang chạy
         mmdb_path = _get_worker_mmdb_path()
         
-        # Open the GeoIP DB once per partition (not per IP)
         reader = None
         try:
             if not mmdb_path:
@@ -35,7 +32,7 @@ def process_dim_location(df):
             try:
                 import maxminddb
             except ImportError:
-                # Workers without maxminddb → skip geo enrichment, don't crash the batch
+
                 return
             reader = maxminddb.open_database(mmdb_path)
 

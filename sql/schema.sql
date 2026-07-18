@@ -1,5 +1,4 @@
--- Align Postgres star schema with Spark write contract (string sha2 SKs).
--- WARNING: drops existing data.
+
 
 DROP TABLE IF EXISTS fact_product_view CASCADE;
 DROP TABLE IF EXISTS dim_product CASCADE;

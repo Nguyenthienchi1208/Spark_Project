@@ -11,7 +11,6 @@ KAFKA_CONFIG = {
     "fail_on_data_loss": os.getenv("KAFKA_FAIL_ON_DATA_LOSS", "false"),
     "security_protocol": os.getenv("KAFKA_SECURITY_PROTOCOL", "SASL_PLAINTEXT"),
     "sasl_mechanism": os.getenv("KAFKA_SASL_MECHANISM", "PLAIN"),
-    # Xóa hoàn toàn sasl_jaas_config khỏi đây!
 }
 
 DB_USER = os.getenv("POSTGRES_USER", "postgres")
@@ -20,7 +19,7 @@ DB_HOST = os.getenv("POSTGRES_HOST", "postgres")
 DB_PORT = os.getenv("POSTGRES_PORT", "5433")
 DB_NAME = os.getenv("POSTGRES_DB", "postgres")
 
-# Cấu hình JDBC cho Spark
+
 DB_URL = f"jdbc:postgresql://{DB_HOST}:{DB_PORT}/{DB_NAME}"
 DB_PROPERTIES = {
     "user": DB_USER,
@@ -28,7 +27,6 @@ DB_PROPERTIES = {
     "driver": "org.postgresql.Driver"
 }
 
-# Giữ nguyên cấu hình cũ nếu bạn vẫn cần dùng ở chỗ khác
 POSTGRES_CONFIG = {
     "url": DB_URL,
     "user": DB_USER,

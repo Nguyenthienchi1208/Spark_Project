@@ -15,7 +15,6 @@ def test_process_dim_location():
     result_df = process_dim_location(df)
     results = result_df.collect()
 
-    # Geo DB may be missing outside docker; skip soft if empty
     if len(results) == 0:
         spark.stop()
         return

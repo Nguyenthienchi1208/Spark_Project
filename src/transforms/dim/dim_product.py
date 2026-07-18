@@ -23,7 +23,6 @@ def transform_to_dim_product(df):
         df_base = df_base.withColumn("collection", F.lit(None).cast("string"))
 
     if "option" in df_base.columns:
-        # Use get() so missing alloy/diamond options become NULL instead of crashing
         df_transformed = (
             df_base
             .withColumn(

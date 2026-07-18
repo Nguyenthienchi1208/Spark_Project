@@ -1,14 +1,3 @@
-"""
-Glamira streaming report dashboard (Postgres ← Spark).
-
-Báo cáo theo yêu cầu:
-1) Top 10 product_id theo lượt view trong ngày
-2) Top 10 quốc gia theo domain trong ngày
-3) Top 5 referrer_url trong ngày
-4) Store + views theo 1 quốc gia (chọn)
-5) Views theo giờ của 1 product_id (chọn)
-6) Views theo giờ theo browser / OS
-"""
 
 from __future__ import annotations
 

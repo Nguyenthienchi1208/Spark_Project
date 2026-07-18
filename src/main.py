@@ -61,7 +61,6 @@ def _upsert_dim(spark, df, table_name, sk_col, columns):
 
 
 def process_batch(df, batch_id):
-    # Checkpoint can restore shuffle.partitions=200 — clamp every batch
     spark = SparkSession.getActiveSession()
     spark.conf.set("spark.sql.shuffle.partitions", "4")
 
@@ -82,7 +81,7 @@ def process_batch(df, batch_id):
             .withColumn("time_stamp", normalize_unix_timestamp("time_stamp"))
             .cache()
         )
-        # Materialize once so later dims/fact share work
+
         _ = df_enriched.count()
 
         logger.info(f"Batch {batch_id}: building dims")

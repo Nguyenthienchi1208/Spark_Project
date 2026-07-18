@@ -10,7 +10,6 @@ def transform_to_dim_customer(df):
         if col_name in df_transformed.columns:
             df_transformed = df_transformed.withColumn(col_name, F.col(col_name).cast("string"))
 
-    # Prefer event timestamp for dedupe ordering when present
     order_col = "time_stamp" if "time_stamp" in df_transformed.columns else "customer_sk"
     window_spec = Window.partitionBy("customer_sk").orderBy(F.col(order_col).desc())
 
