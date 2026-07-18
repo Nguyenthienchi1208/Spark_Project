@@ -12,6 +12,7 @@ def get_kafka_stream(spark, kafka_config):
         .option("failOnDataLoss", kafka_config.get("fail_on_data_loss", "false"))
         .option("kafka.security.protocol", kafka_config["security_protocol"])
         .option("kafka.sasl.mechanism", kafka_config["sasl_mechanism"])
+        .option("kafka.sasl.jaas.config", kafka_config["sasl_jaas_config"])
     )
 
     return reader.load()

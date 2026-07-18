@@ -11,6 +11,10 @@ KAFKA_CONFIG = {
     "fail_on_data_loss": os.getenv("KAFKA_FAIL_ON_DATA_LOSS", "false"),
     "security_protocol": os.getenv("KAFKA_SECURITY_PROTOCOL", "SASL_PLAINTEXT"),
     "sasl_mechanism": os.getenv("KAFKA_SASL_MECHANISM", "PLAIN"),
+    "sasl_jaas_config": os.getenv(
+        "KAFKA_SASL_JAAS_CONFIG",
+        "org.apache.kafka.common.security.plain.PlainLoginModule required username='username' password='password';"
+    ),
 }
 
 DB_USER = os.getenv("POSTGRES_USER", "postgres")
